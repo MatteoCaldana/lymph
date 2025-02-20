@@ -26,26 +26,41 @@ addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
 %% Simulation - Setup
 run("../RunSetup.m")
 
-%% Input Data - Boundary conditions - Forcing term
+for deg = 1:2
+for int_strategy = ["QF"]
+for mesh_kind = ['P']
+
+% Input Data - Boundary conditions - Forcing term
 DataConvTestLap;
+
+Data.quadrature = int_strategy; 
+Data.degree = deg;
 
 Errors.err_L2 = [];
 Errors.err_dG = [];
 Errors.h = [];
 
-%% Mesh Generation
-for ii = 1:4
-
+% Mesh Generation
+for ii = 1:numel(Data.N)
+    kind = mesh_kind;
+    rng("default")
+    Data.VTKMeshFileName = sprintf('Mesh_%s_%d.vtk', kind, Data.N{ii});
     if Data.MeshFromFile
         % Load an existing mesh
         Data.meshfile = fullfile(Data.FolderName,Data.meshfileseq{ii});
     else
         % Create a new mesh
-        [Data.meshfile] = MakeMeshMonodomain(Data,Data.N{ii},Data.domain,Data.FolderName,Data.meshfileseq{ii},'P','laplacian');
+        if kind ~= 'P'
+            nn = round(sqrt(Data.N{ii}));
+            NN = [nn, nn];
+        else
+            NN = Data.N{ii};
+        end
+        [Data.meshfile] = MakeMeshMonodomain(Data,NN,Data.domain,Data.FolderName,Data.meshfileseq{ii},kind,'laplacian');
     end
     
     
-    %% Main     
+    % Main     
     [Error] = MainLaplacian(Data,Setup);
     Errors.err_L2   = [Errors.err_L2, Error.L2];
     Errors.err_dG   = [Errors.err_dG, Error.dG];
@@ -53,7 +68,7 @@ for ii = 1:4
 
 end
 
-%% Plot of the errors
+% Plot of the errors
 figure
 loglog(Errors.h,Errors.h.^Data.degree,'k:','Linewidth',2)
 hold on
@@ -67,3 +82,7 @@ legend(conv1, conv2, "Error $L^2$-norm", "Error DG-norm","Interpreter","latex")
 grid on
 Errors.order_L2 = log(Errors.err_L2(1:end-1)./Errors.err_L2(2:end))./log(Errors.h(1:end-1)./Errors.h(2:end));
 Errors.order_dG = log(Errors.err_dG(1:end-1)./Errors.err_dG(2:end))./log(Errors.h(1:end-1)./Errors.h(2:end));
+
+end
+end
+end

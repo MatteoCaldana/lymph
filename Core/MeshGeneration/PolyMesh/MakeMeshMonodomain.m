@@ -64,14 +64,63 @@ elseif (strcmp(MeshType,'C')==1)
     ax = Dati.domain(1); bx = Dati.domain(2);
     ay = Dati.domain(3); by = Dati.domain(4);
     nelx = N(1); nely = N(2);
-    N = nelx*nely;
+    Nel = nelx*nely;
     
     dx = (bx-ax)/nelx; dy = (by-ay)/nely;
     [X,Y] = meshgrid(ax+dx/2:dx:bx, ay+dy/2:dy:by);
     P = [X(:) Y(:)];
     
-    [region] = PolyMesher(@Rectangle,N,100,P);
-    
+    [region] = PolyMesher(@Rectangle,Nel,1,P);
+
+elseif (strcmp(MeshType,'T')==1)
+
+    % structured triangular mesh
+    ax = Dati.domain(1); bx = Dati.domain(2);
+    ay = Dati.domain(3); by = Dati.domain(4);
+    nelx = N(1); nely = N(2);
+    Nel = 2*nelx*nely;
+    dx = (bx-ax)/nelx; dy = (by-ay)/nely;
+    [X,Y] = meshgrid(ax:dx:bx, ay:dy:by);
+    P = [X(:) Y(:)];
+
+    nrows = size(X, 1);
+    ncols = size(X, 2);
+
+    % Initialize list of incenters
+    incenters = [];
+
+    % Loop through each rectangle
+    for i = 1:(nrows-1)
+        for j = 1:(ncols-1)
+            orientation = mod(mod(i, 2) + mod(j, 2), 2);
+            % Define vertices of the rectangle
+            p1 = [X(i, j), Y(i, j)];
+            p2 = [X(i+1, j), Y(i+1, j)];
+            p3 = [X(i, j+1), Y(i, j+1)];
+            p4 = [X(i+1, j+1), Y(i+1, j+1)];
+            
+            if orientation == 0
+                tri1 = [p1; p2; p3];
+                tri2 = [p2; p4; p3];
+            else
+                tri1 = [p1; p4; p3];
+                tri2 = [p1; p2; p4];
+            end
+            
+            % Triangle 1: p1, p2, p3
+            
+            incenter1 = computeIncenter(tri1);
+            
+            % Triangle 2: p2, p4, p3
+            
+            incenter2 = computeIncenter(tri2);
+            
+            % Append results
+            incenters = [incenters; incenter1; incenter2];
+        end
+    end
+
+    [region] = PolyMesher(@Rectangle,Nel,1,incenters);
 end
 
 
@@ -82,3 +131,24 @@ end
 %% Otuput 
 FileNameOut = strcat(FolderName,'/',FileName,'_',num2str(region.ne),'_el.mat');
 save(FileNameOut,'region','neighbor');
+end
+
+% Helper function to compute incenter
+function incenter = computeIncenter(triangle)
+    % Vertices
+    p1 = triangle(1, :);
+    p2 = triangle(2, :);
+    p3 = triangle(3, :);
+    
+    % Side lengths
+    a = norm(p2 - p3);
+    b = norm(p3 - p1);
+    c = norm(p1 - p2);
+    
+    % Incenter formula
+    x = (a * p1(1) + b * p2(1) + c * p3(1)) / (a + b + c);
+    y = (a * p1(2) + b * p2(2) + c * p3(2)) / (a + b + c);
+    
+    % Return incenter
+    incenter = [x, y];
+end

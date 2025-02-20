@@ -20,7 +20,7 @@
 Setup.isPlotMesh = 0;
 
 % Save VTK polygonal mesh y/n
-Setup.isSaveVTKMesh = 0;
+Setup.isSaveVTKMesh = 1;
 
 % Plot solution y/n
 Setup.isPlotSolution = 0;
@@ -34,7 +34,7 @@ Setup.isSaveCSV = 0;
 
 % Additional solution output y/n -> .vtk file
 Setup.isSaveVTK = 0;
-Setup.OutFolderVTK = 'OutputVTK';
+Setup.OutFolderVTK = 'InputMesh';
 
 % Compute errors y/n
 Setup.isError = 1;
