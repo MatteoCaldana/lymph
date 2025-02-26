@@ -64,7 +64,7 @@ else
     % Mesh points
     fprintf(fid,'POINTS %i float\n', length(x));
     coords = [x y z];
-    fprintf(fid,'%.4e %.4e %i\n',coords');
+    fprintf(fid,'%.17e %.17e %i\n',coords');
     
     numpoly = size(conn,1);
     numval = size(conn,1)*size(conn,2) + numpoly;
@@ -86,13 +86,13 @@ else
         % Scalar value
         fprintf(fid,['SCALARS  ', prop_name,' float 1\n']);
         fprintf(fid,'LOOKUP_TABLE default\n');
-        fprintf(fid,'%.4e\n',val);
+        fprintf(fid,'%.17e\n',val);
         
     else        
         % Vectors
         fprintf(fid,['VECTORS  ' ,prop_name, '  float\n']);
         val = [val zeros(size(val,1),1)];
-        fprintf(fid,'%.4e %.4e %i\n',val');
+        fprintf(fid,'%.17e %.17e %i\n',val');
     end
 
 end

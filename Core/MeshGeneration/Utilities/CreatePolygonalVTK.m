@@ -35,7 +35,7 @@ function CreatePolygonalVTK(Data, Setup, region)
     %% Points
     fprintf(fileID,"POINTS %d float\n",size(region.coord,1));
     app = [region.coord zeros(size(region.coord,1),1)];
-    fprintf(fileID,'%d %6.7f %6.7f\r\n',app');
+    fprintf(fileID,'%.17e %.17e %.17e\n',app');
 
     s = region.ne+sum(cell2mat(cellfun(@length,region.connectivity,'UniformOutput',false)));
 
