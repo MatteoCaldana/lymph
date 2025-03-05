@@ -53,6 +53,10 @@ SA_loc = mat2cell(zeros(femregion.nbases*max_nedges,femregion.nbases,femregion.n
 prog = 0;
 fprintf(1,'Computation Progress: %3d%%\n',prog);
 
+
+IAn_loc_all = cell(femregion.nel, 1);
+SAn_loc_all = cell(femregion.nel, 1);
+
 for ie = 1:femregion.nel
 
     % Visualization of computational progress
@@ -108,6 +112,9 @@ for ie = 1:femregion.nel
     % Computation of all the penalty coefficients for the element ie
     [penalty_geom] = PenaltyCoefficient(femregion, Data, ie, neighedges_ie, neigh_ie, meshsize);
 
+    IAn_loc = zeros(femregion.nbases, femregion.nbases, neighbor.nedges(ie));
+    SAn_loc = zeros(femregion.nbases, femregion.nbases, neighbor.nedges(ie));
+
     % Loop over faces
     for iedg = 1 : neighbor.nedges(ie)
 
@@ -147,19 +154,23 @@ for ie = 1:femregion.nel
         ny = normals(2,iedg);
 
         %% Matrix assembling
+        
+        % NEW: override for simplicity
+        penalty_geom = ones(size(penalty_geom)) * Data.penalty_coeff;
 
         % Dirichlet boundary faces
         if neigh_ie(iedg) == -1
 
-            IA_loc{ie}(1:femregion.nbases,:)  = IA_loc{ie}(1:femregion.nbases,:)  + (ds .* mu .* (nx * gradedgeqx + ny * gradedgeqy))' * phiedgeq;
-            SA_loc{ie}(1:femregion.nbases,:)  = SA_loc{ie}(1:femregion.nbases,:)  + penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * phiedgeq;
+            IA_loc{ie}(1:femregion.nbases,:) = IA_loc{ie}(1:femregion.nbases,:) + (ds .* mu .* (nx * gradedgeqx + ny * gradedgeqy))' * phiedgeq;
+            SA_loc{ie}(1:femregion.nbases,:) = SA_loc{ie}(1:femregion.nbases,:) + penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * phiedgeq;
 
             % Internal faces
         elseif neigh_ie(iedg) > 0
 
             % Element itself
-            IA_loc{ie}(1:femregion.nbases,:)  = IA_loc{ie}(1:femregion.nbases,:)  + 0.5 * (ds .* mu .* (nx * gradedgeqx + ny * gradedgeqy))' * phiedgeq;
-            SA_loc{ie}(1:femregion.nbases,:)  = SA_loc{ie}(1:femregion.nbases,:)  + penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * phiedgeq;
+            % NEW: remove 0.5 factor in IA
+            IA_loc{ie}(1:femregion.nbases,:) = IA_loc{ie}(1:femregion.nbases,:) + (ds .* mu .* (nx * gradedgeqx + ny * gradedgeqy))' * phiedgeq;
+            SA_loc{ie}(1:femregion.nbases,:) = SA_loc{ie}(1:femregion.nbases,:) + penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * phiedgeq;
 
             % Construction and evalutation on the quadrature points of the basis functions for the neighbor
             phiedgeqneigh = Evalshape2D(femregion, neigh_ie(iedg), qNodes_1D);
@@ -175,12 +186,18 @@ for ie = 1:femregion.nel
             % Extracellular component
             IA_loc{ie}(neigh_idx,:)  = IA_loc{ie}(neigh_idx,:) - 0.5 * (ds .* mu .* ( nx * gradedgeqx +  ny * gradedgeqy))' * phiedgeqneigh;
             SA_loc{ie}(neigh_idx,:)  = SA_loc{ie}(neigh_idx,:) - penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * phiedgeqneigh;
-
+            
+            IAn_loc(:, :, iedg) = IAn_loc(:, :, iedg) - (ds .* mu .* ( nx * gradedgeqx +  ny * gradedgeqy))' * phiedgeqneigh;
+            SAn_loc(:, :, iedg) = SAn_loc(:, :, iedg) - penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * phiedgeqneigh;
         end
 
     end
-
+    IAn_loc_all{ie} = IAn_loc; 
+    SAn_loc_all{ie} = SAn_loc; 
+    writematrix(IAn_loc, sprintf("IAn_loc_%d.txt", ie))
 end
+
+
 
 % Local matrix to global matrix
 ii_index  = reshape(cell2mat(ii_index),[femregion.nbases,femregion.nbases*femregion.nel]);
@@ -188,6 +205,18 @@ jj_index  = reshape(cell2mat(jj_index),[femregion.nbases,femregion.nbases*femreg
 
 Mprj_loc = reshape(cell2mat(Mprj_loc),[femregion.nbases,femregion.nbases*femregion.nel]);
 A_loc = reshape(cell2mat(A_loc),[femregion.nbases,femregion.nbases*femregion.nel]);
+writematrix(Mprj_loc)
+writematrix(A_loc)
+
+IA_loc_self = zeros(size(A_loc));
+SA_loc_self = zeros(size(A_loc));
+for ie = 1:femregion.nel
+    j0 = (ie - 1) * femregion.nbases + 1;
+    IA_loc_self(:, j0:j0+femregion.nbases-1) = IA_loc{ie}(1:femregion.nbases,:);
+    SA_loc_self(:, j0:j0+femregion.nbases-1) = SA_loc{ie}(1:femregion.nbases,:);
+end
+writematrix(IA_loc_self)
+writematrix(SA_loc_self)
 
 ii_index_neigh = reshape(cell2mat(ii_index_neigh),[femregion.nbases,femregion.nel*max_nedges*femregion.nbases]);
 jj_index_neigh = reshape(cell2mat(jj_index_neigh),[femregion.nbases,femregion.nel*max_nedges*femregion.nbases]);

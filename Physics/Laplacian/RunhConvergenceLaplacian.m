@@ -26,8 +26,8 @@ addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
 %% Simulation - Setup
 run("../RunSetup.m")
 
-for deg = 1:2
-for int_strategy = ["QF"]
+for deg = 1:1
+for int_strategy = ["ST"]
 for mesh_kind = ['P']
 
 % Input Data - Boundary conditions - Forcing term
