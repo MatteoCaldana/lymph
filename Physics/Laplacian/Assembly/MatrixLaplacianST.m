@@ -116,8 +116,8 @@ for ie = 1:femregion.nel
     SAn_loc = zeros(femregion.nbases, femregion.nbases, neighbor.nedges(ie));
 
     % Loop over faces
+    iedg_real = 1;
     for iedg = 1 : neighbor.nedges(ie)
-
         % Extraction of the id of the neighboring element in the matrices IAN and SAN
         idneigh = (neigh_ie_unq == neighbor.neigh{ie}(iedg));
 
@@ -187,14 +187,16 @@ for ie = 1:femregion.nel
             IA_loc{ie}(neigh_idx,:)  = IA_loc{ie}(neigh_idx,:) - 0.5 * (ds .* mu .* ( nx * gradedgeqx +  ny * gradedgeqy))' * phiedgeqneigh;
             SA_loc{ie}(neigh_idx,:)  = SA_loc{ie}(neigh_idx,:) - penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * phiedgeqneigh;
             
-            IAn_loc(:, :, iedg) = IAn_loc(:, :, iedg) - (ds .* mu .* ( nx * gradedgeqx +  ny * gradedgeqy))' * phiedgeqneigh;
-            SAn_loc(:, :, iedg) = SAn_loc(:, :, iedg) - penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * phiedgeqneigh;
+            IAn_loc(:, :, iedg_real) = IAn_loc(:, :, iedg_real) + (ds .* mu .* ( nx * gradedgeqx +  ny * gradedgeqy))' * phiedgeqneigh;
+            SAn_loc(:, :, iedg_real) = SAn_loc(:, :, iedg_real) + penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * phiedgeqneigh;
+            iedg_real = iedg_real + 1;
         end
 
     end
     IAn_loc_all{ie} = IAn_loc; 
     SAn_loc_all{ie} = SAn_loc; 
-    writematrix(IAn_loc, sprintf("IAn_loc_%d.txt", ie))
+    writematrix(IAn_loc, sprintf("IAn_loc_%d.txt", ie - 1))
+    writematrix(SAn_loc, sprintf("SAn_loc_%d.txt", ie - 1))
 end
 
 

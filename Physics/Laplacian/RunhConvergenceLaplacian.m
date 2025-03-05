@@ -26,7 +26,7 @@ addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
 %% Simulation - Setup
 run("../RunSetup.m")
 
-for deg = 1:1
+for deg = 2:2
 for int_strategy = ["ST"]
 for mesh_kind = ['P']
 
