@@ -26,9 +26,9 @@ addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
 %% Simulation - Setup
 run("../RunSetup.m")
 
-for deg = 1:2
-for int_strategy = ["QF"]
-for mesh_kind = ['P']
+for deg = 1:5
+for int_strategy = ["QF", "ST"]
+for mesh_kind = ['T', 'P']
 
 % Input Data - Boundary conditions - Forcing term
 DataConvTestLap;
@@ -42,6 +42,8 @@ Errors.h = [];
 
 % Mesh Generation
 for ii = 1:numel(Data.N)
+    Data.mesh_kind = mesh_kind;
+    Data.nel = Data.N{ii};
     kind = mesh_kind;
     rng("default")
     Data.VTKMeshFileName = sprintf('Mesh_%s_%d.vtk', kind, Data.N{ii});
@@ -66,6 +68,7 @@ for ii = 1:numel(Data.N)
     Errors.err_dG   = [Errors.err_dG, Error.dG];
     Errors.h        = [Errors.h, Error.h];
 
+    
 end
 
 % Plot of the errors
@@ -83,6 +86,7 @@ grid on
 Errors.order_L2 = log(Errors.err_L2(1:end-1)./Errors.err_L2(2:end))./log(Errors.h(1:end-1)./Errors.h(2:end));
 Errors.order_dG = log(Errors.err_dG(1:end-1)./Errors.err_dG(2:end))./log(Errors.h(1:end-1)./Errors.h(2:end));
 
+close all
 end
 end
 end

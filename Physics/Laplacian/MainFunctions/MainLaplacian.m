@@ -23,6 +23,7 @@ fprintf('\n------------------------------------------------------------------\n'
 
 %% Mesh setup
 [mesh, femregion, Data.h] = MeshFemregionSetup(Setup, Data, {Data.TagElLap}, {'L'});
+timings = struct('deg', Data.degree, 'int_strategy', Data.quadrature , 'mesh_kind', Data.mesh_kind, 'nel', Data.nel, 'solve', 0, 'compute_error', 0, 'rhs', 0, 'assembly', 0);
 
 %% Matrix Assembly
 fprintf('\nMatrices computation ... \n');
@@ -33,7 +34,8 @@ switch Data.quadrature
     case "ST"
         [Matrices] = MatrixLaplacianST(Data, mesh.neighbor, femregion);
 end
-toc
+assembly = toc;
+timings.assembly = assembly;
 fprintf('\nDone\n')
 fprintf('\n------------------------------------------------------------------\n')
 
@@ -42,7 +44,8 @@ fprintf('\n------------------------------------------------------------------\n'
 fprintf('\nComputing RHS ... \n');
 tic
 [F] = ForcingLaplacian(Data, mesh.neighbor, femregion);
-toc
+rhs = toc;
+timings.rhs = rhs;
 fprintf('\nDone\n')
 fprintf('\n------------------------------------------------------------------\n')
 
@@ -50,7 +53,8 @@ fprintf('\n------------------------------------------------------------------\n'
 fprintf('\nSolving linear system ... ');
 tic
 U = Matrices.A \ F;
-toc
+solve = toc;
+timings.solve = solve;
 fprintf('\nDone\n')
 fprintf('\n------------------------------------------------------------------\n')
 
@@ -62,7 +66,10 @@ end
 %% Compute Errors
 if Setup.isError
     fprintf('\nComputing Errors ... \n');
+    tic
     [Error] = ComputeErrors(Data, femregion, Matrices, U);
+    compute_error = toc;
+    timings.compute_error = compute_error;
     fprintf('Done\n')
     fprintf('\n------------------------------------------------------------------\n')
 else
@@ -70,5 +77,10 @@ else
 end
 
 fprintf('\nBye \n');
+
+fid = fopen(sprintf('timing_d%d_%s_%s_n%d.json',Data.degree, Data.quadrature, Data.mesh_kind, Data.nel),'w');
+fprintf(fid,'%s',jsonencode(timings));
+fclose(fid);
+
 
 

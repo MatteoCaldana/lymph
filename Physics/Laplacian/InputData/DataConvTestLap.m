@@ -7,8 +7,8 @@ Data.TagBcLap = [2 3 4 5]; % Boundary tag
 Data.LabBcLap = 'DDDD';    % Dirichlet/Neumann/Abso
 
 %% Geometrical properties 
-Data.domain       = [0 2/3 0 1]; % domain bounds for a new mesh
-Data.N            = {20};        % number of elements for a new mesh
+Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
+Data.N            = {20, 80, 320, 1280};        % number of elements for a new mesh
 Data.MeshFromFile = false;     % read mesh from file
 Data.FolderName   = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
