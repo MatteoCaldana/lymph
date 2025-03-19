@@ -154,9 +154,6 @@ for ie = 1:femregion.nel
         ny = normals(2,iedg);
 
         %% Matrix assembling
-        
-        % NEW: override for simplicity
-        penalty_geom = ones(size(penalty_geom)) * Data.penalty_coeff;
 
         % Dirichlet boundary faces
         if neigh_ie(iedg) == -1
@@ -168,8 +165,7 @@ for ie = 1:femregion.nel
         elseif neigh_ie(iedg) > 0
 
             % Element itself
-            % NEW: remove 0.5 factor in IA
-            IA_loc{ie}(1:femregion.nbases,:) = IA_loc{ie}(1:femregion.nbases,:) + (ds .* mu .* (nx * gradedgeqx + ny * gradedgeqy))' * phiedgeq;
+            IA_loc{ie}(1:femregion.nbases,:) = IA_loc{ie}(1:femregion.nbases,:) + 0.5 * (ds .* mu .* (nx * gradedgeqx + ny * gradedgeqy))' * phiedgeq;
             SA_loc{ie}(1:femregion.nbases,:) = SA_loc{ie}(1:femregion.nbases,:) + penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * phiedgeq;
 
             % Construction and evalutation on the quadrature points of the basis functions for the neighbor
@@ -244,6 +240,7 @@ SA   = sparse(ii_index_neigh,jj_index_neigh,SA_loc,femregion.ndof,femregion.ndof
 dGA = A + SA; % For error computation in dG-norm
 
 A = dGA - IA - transpose(IA); % dG stiffness matrix
+writematrix(full(A), 'A_glob.txt')
 
 % Build the Matrices structure
 Matrices = struct('Mprj', Mprj, ...
