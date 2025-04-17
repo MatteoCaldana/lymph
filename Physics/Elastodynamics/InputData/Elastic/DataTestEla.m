@@ -7,8 +7,8 @@ Data.TagBcEla   = [2 3 4 5]; % Boundary tag
 Data.LabBcEla   = 'DDDD';    % (D)irichlet/(N)eumann/(A)bso
 
 %% Geometrical properties 
-Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
-Data.N            = 200;        % number of elements for a new mesh
+Data.domain       = [0 2/3 0 1]; % domain bounds for a new mesh
+Data.N            = 20;        % number of elements for a new mesh
 Data.MeshFromFile = false;      % read mesh from file
 Data.FolderName   = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
@@ -18,14 +18,14 @@ Data.meshfileseq  = 'UnitSquare'; %filename for mesh
 
 % Time integration
 Data.t0      = 0;
-Data.T       = 0.01;
+Data.T       = 0.0;
 Data.dt      = 0.01;
 Data.timeint = 'newmark';
 Data.BetaNM  = 0.25;
 Data.GammaNM = 0.5;
 
 % Space discretization
-Data.degree        = 2;  % Polynomial degree
+Data.degree        = 1;  % Polynomial degree
 Data.penalty_coeff = 10; % Penalty coefficient
 
 %% Quadrature settings
@@ -44,8 +44,8 @@ Data.vs_el     = {@(x,y) 1 + 0.*x.*y};
 Data.vp_el     = {@(x,y) 2 + 0.*x.*y};
 Data.zeta      = {@(x,y) 0 + 0.*x.*y};
 
-Data.mu_el     = {@(x,y) 1 + 0.*x.*y}; % Data.vs_el^2 * Data.rho_el;
-Data.lam_el    = {@(x,y) 2 + 0.*x.*y}; % Data.vp_el^2 * Data.rho_el - 2*Data.mu_el;
+Data.mu_el     = {@(x,y) 0.5 + 0.*x.*y}; % Data.vs_el^2 * Data.rho_el;
+Data.lam_el    = {@(x,y) 1.0 + 0.*x.*y}; % Data.vp_el^2 * Data.rho_el - 2*Data.mu_el;
 
 %% Forcing terms
 % forcing term elastic media

@@ -7,7 +7,7 @@ Data.TagBcLap = [2 3 4 5]; % Boundary tag
 Data.LabBcLap = 'DDDD';    % Dirichlet/Neumann/Abso
 
 %% Geometrical properties 
-Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
+Data.domain       = [0 2/3 0 1]; % domain bounds for a new mesh
 Data.N            = 19600;     % number of elements for a new mesh
 Data.MeshFromFile = true;      % read mesh from file
 Data.FolderName   = 'InputMesh';

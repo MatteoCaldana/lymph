@@ -7,8 +7,8 @@ Data.TagBcLap = [2 3 4 5]; % Boundary tag
 Data.LabBcLap = 'DDDD';    % Dirichlet/Neumann/Abso
 
 %% Geometrical properties 
-Data.domain       = [0 2/3 0 1]; % domain bounds for a new mesh
-Data.N            = {20};        % number of elements for a new mesh
+Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
+Data.N            = {512};        % number of elements for a new mesh
 Data.MeshFromFile = false;     % read mesh from file
 Data.FolderName   = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
@@ -17,7 +17,7 @@ Data.meshfileseq  = {"Lap_100_el.mat","Lap_200_el.mat", ...
 
 %% Space discretization
 Data.degree  = 4;   % Polynomial degree
-Data.penalty_coeff = 10; % Penalty coefficient
+Data.penalty_coeff = 1.; % Penalty coefficient
 
 %% Quadrature settings
 Data.quadrature = "ST";       % Quadrature type: ST/QF
@@ -31,13 +31,13 @@ Data.NPtsVisualization = 3;
 Data.mu       = {@(x,y) 1.*x.^0.*y.^0};
 
 % Forcing Term
-Data.source   = {@(x,y) 10.0 * x.*y};
+Data.source   = {@(x,y) 8 * pi * pi * sin(2*pi*x).*sin(2*pi*y)};
 
 % Boundary Conditions
-Data.DirBC    = {@(x,y) 10.0 * x.*y};
+Data.DirBC    = {@(x,y) sin(2*pi*x).*sin(2*pi*y)};
 
 % Exact Solution (if any)
-Data.u_ex     =  {@(x,y) sin(2*pi*x).*cos(2*pi*y)};
+Data.u_ex     =  {@(x,y) sin(2*pi*x).*sin(2*pi*y)};
 
 % Gradient of the Exact Solution
 Data.gradu_ex =  {@(x,y)  2*pi*cos(2*pi*x).*cos(2*pi*y); ...

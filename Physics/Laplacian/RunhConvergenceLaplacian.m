@@ -26,8 +26,8 @@ addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
 %% Simulation - Setup
 run("../RunSetup.m")
 
-for deg = 2:2
-for int_strategy = ["ST"]
+for deg = 5:5
+for int_strategy = ["QF"]
 for mesh_kind = ['P']
 
 % Input Data - Boundary conditions - Forcing term
@@ -47,7 +47,7 @@ for ii = 1:numel(Data.N)
     Data.VTKMeshFileName = sprintf('Mesh_%s_%d.vtk', kind, Data.N{ii});
     if Data.MeshFromFile
         % Load an existing mesh
-        Data.meshfile = fullfile(Data.FolderName,Data.meshfileseq{ii});
+        Data.meshfile = fullfile(Data.FolderName,Data.meshfileseq{1});
     else
         % Create a new mesh
         if kind ~= 'P'
@@ -56,7 +56,7 @@ for ii = 1:numel(Data.N)
         else
             NN = Data.N{ii};
         end
-        [Data.meshfile] = MakeMeshMonodomain(Data,NN,Data.domain,Data.FolderName,Data.meshfileseq{ii},kind,'laplacian');
+        [Data.meshfile] = MakeMeshMonodomain(Data,NN,Data.domain,Data.FolderName,Data.meshfileseq{1},kind,'laplacian');
     end
     
     

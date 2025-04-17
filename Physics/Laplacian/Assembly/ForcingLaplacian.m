@@ -33,13 +33,14 @@ function [F] = ForcingLaplacian(Data, neighbor, femregion)
     fprintf(1,'Computation Progress: %3d%%\n',prog);
 
     Fvol = zeros(femregion.nbases,femregion.nel);
-    Fsur = zeros(femregion.nbases,femregion.nel);
+    Fsur1 = zeros(femregion.nbases,femregion.nel);
+    Fsur2 = zeros(femregion.nbases,femregion.nel);
     
     for ie = 1:femregion.nel
         
         % Visualization of computational progress
         prog = ( 100*(ie/femregion.nel) );
-        fprintf(1,'\b\b\b\b%3.0f%%',prog);
+        %fprintf(1,'\b\b\b\b%3.0f%%',prog);
 
         % Selection of the matrix positions associated to element ie
         index = (ie-1)*femregion.nbases*ones(femregion.nbases,1) + (1:femregion.nbases)';
@@ -59,7 +60,8 @@ function [F] = ForcingLaplacian(Data, neighbor, femregion)
     
         % Local forcing vector definition
         F_loc = zeros(femregion.nbases,1);
-        F_loc_sur = zeros(femregion.nbases,1);
+        F_loc_sur1 = zeros(femregion.nbases,1);
+        F_loc_sur2 = zeros(femregion.nbases,1);
 
         for iTria = 1:size(Tria,1)
                  
@@ -125,19 +127,17 @@ function [F] = ForcingLaplacian(Data, neighbor, femregion)
                gD = Data.DirBC{1}(xq,yq);
      
                % Vector assembling
-               F_loc_sur = F_loc_sur - (ds .* mu .* ( nx * gradedgeqx + ny * gradedgeqy))' * gD;
-               F_loc_sur = F_loc_sur + penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * gD;
+               F_loc_sur1 = F_loc_sur1 - (ds .* mu .* ( nx * gradedgeqx + ny * gradedgeqy))' * gD;
+               F_loc_sur2 = F_loc_sur2 + penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * gD;
           
             end
         end
-        Fsur(:, ie) = F_loc_sur;
+        Fsur1(:, ie) = F_loc_sur1;
+        Fsur2(:, ie) = F_loc_sur2;
 
         % Local vector to global vector
-        F(index) = F_loc + F_loc_sur;
+        F(index) = F_loc + F_loc_sur1 + F_loc_sur2;
     end
-
-    writematrix(Fvol);
-    writematrix(Fsur);
-    writematrix(F, "F_glob");
-    
+    writematrix(Fsur1);
+    writematrix(Fsur2);
 end

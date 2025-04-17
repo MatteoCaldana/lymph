@@ -33,7 +33,7 @@
 %>
 %==========================================================================
 function [FileNameOut] = MakeMeshMonodomain(Data,N,DomainLimits,FolderName,FileName,MeshType,SimType) 
-
+rng("default")
 %% Set directories and names
 
 if ~exist(FolderName,'dir')

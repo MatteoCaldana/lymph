@@ -29,8 +29,8 @@ addpath(genpath(fullfile(MyPhysicsPath,'TimeIntegration')));
 run("../RunSetup.m")
 
 %% Input Data - Boundary conditions - Forcing term
-%DataTestEla;
-DataTestPhysicsEla;
+DataTestEla;
+%DataTestPhysicsEla;
 
 %% Mesh Generation
 if Data.MeshFromFile

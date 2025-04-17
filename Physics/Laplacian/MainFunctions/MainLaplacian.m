@@ -49,6 +49,8 @@ fprintf('\n------------------------------------------------------------------\n'
 %% Solving the linear system
 fprintf('\nSolving linear system ... ');
 tic
+% A_512
+% rhs_512
 U = Matrices.A \ F;
 toc
 fprintf('\nDone\n')
