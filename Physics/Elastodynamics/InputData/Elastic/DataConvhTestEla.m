@@ -10,7 +10,7 @@ Data.LabBcEla   = 'DDDD'; % Dirichlet/Neumann/Abso/
 %% Geometrical properties 
 
 Data.domain          = [0 1 0 1];
-Data.N               = {100, 200, 400, 800};  %number of elements
+Data.N               = {10, 20, 30};  %number of elements
 Data.MeshFromFile    = false;
 Data.FolderName      = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
@@ -33,7 +33,7 @@ Data.penalty_coeff = 10; % Penalty coefficient
 
 
 %% Quadrature settings
-Data.quadrature = "QF";       % Quadrature type: ST/QF
+Data.quadrature = "ST";       % Quadrature type: ST/QF
 
 %% Visualization settings
 Data.PlotExact         = false;
@@ -54,6 +54,10 @@ Data.lam_el    = {@(x,y) 2 + 0.*x.*y}; % Data.vp_el^2 * Data.rho_el - 2*Data.mu_
 % forcing term elastic media
 Data.source_f   = {@(x,y,t)  sin(sqrt(2)*pi*t).*(2*pi^2*cos(pi*y).*sin(pi*y).*(4*cos(2*pi*x) - (2*cos(2*pi*x))/2 - 1)); ...
                    @(x,y,t) sin(sqrt(2)*pi*t).*(-2*pi^2*cos(pi*x).*sin(pi*x).*(4*cos(2*pi*y) - (2*cos(2*pi*y))/2 - 1))};
+
+% without time term
+Data.source_f   = {@(x,y,t) 2 * pi * pi * sin(sqrt(2) * pi * t) .* (2 * cos(2 * pi * x) - 1) .* sin(2 * pi * y); ...
+                   @(x,y,t) 2 * pi * pi * sin(sqrt(2) * pi * t) .* sin(2 * pi * x) .* (1 - 2 * cos(2 * pi * y))};
 
 Data.source_g   = {@(x,y,t) 0*t.*x.*y;...
                    @(x,y,t) 0*t.*x.*y};

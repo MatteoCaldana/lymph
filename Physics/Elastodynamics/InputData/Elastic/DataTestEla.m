@@ -29,7 +29,7 @@ Data.degree        = 1;  % Polynomial degree
 Data.penalty_coeff = 10; % Penalty coefficient
 
 %% Quadrature settings
-Data.quadrature = "QF";       % Quadrature type: ST/QF
+Data.quadrature = "ST";       % Quadrature type: ST/QF
 
 %% Visualization settings
 Data.PlotExact         = true;

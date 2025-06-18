@@ -39,14 +39,14 @@ Errors.err_energy = [];
 Errors.h          = [];
 
 %% Mesh Generation
-for ii = 1:4
+for ii = 1:1
 
     if Data.MeshFromFile
         % Load an existing mesh
         Data.meshfile = fullfile(Data.FolderName,Data.meshfileseq(ii));
     else
         % Create a new mesh
-        [Data.meshfile] = MakeMeshMonodomain(Data,Data.N{ii},Data.domain,Data.FolderName,Data.meshfileseq{ii},'P','ela');
+        [Data.meshfile] = MakeMeshMonodomain(Data,Data.N{ii},Data.domain,Data.FolderName,Data.meshfileseq{ii},'C','ela');
     end
     
     

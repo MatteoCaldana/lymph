@@ -66,19 +66,23 @@ if ~Setup.isError; clear Matrices; end
 
 %% Time-integration loop
 
-if strcmp(Data.timeint,'newmark')
-    fprintf('\nNewmark time integration ... \n');
-    tic    
-    U_h = NewmarkScheme(Setup, Data, femregion, mesh, A, B, C, U_old);
-    toc
-    fprintf('\nDone\n')
-    fprintf('\n------------------------------------------------------------------\n')
-else 
-    fprintf('\nTime integration scheme undefined ... \n');  
-    fprintf('\nDone\n')
-    fprintf('\n------------------------------------------------------------------\n')
-    stop;
-end
+[F, ~] = ForEla(Data, mesh.neighbor, femregion, Data.T);
+u_h = Matrices.Ela.A_E \ F;
+U_h = [u_h; zeros(size(u_h))];
+
+% if strcmp(Data.timeint,'newmark')
+%     fprintf('\nNewmark time integration ... \n');
+%     tic    
+%     U_h = NewmarkScheme(Setup, Data, femregion, mesh, A, B, C, U_old);
+%     toc
+%     fprintf('\nDone\n')
+%     fprintf('\n------------------------------------------------------------------\n')
+% else 
+%     fprintf('\nTime integration scheme undefined ... \n');  
+%     fprintf('\nDone\n')
+%     fprintf('\n------------------------------------------------------------------\n')
+%     stop;
+% end
 
 %% Post-processing final time
 
