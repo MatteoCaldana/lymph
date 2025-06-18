@@ -59,10 +59,6 @@ Edge.IT2_loc = mat2cell(zeros(femregion.nbases*max_nedges,femregion.nbases,femre
 Edge.IT3_loc = mat2cell(zeros(femregion.nbases*max_nedges,femregion.nbases,femregion.nel),femregion.nbases*max_nedges,femregion.nbases,ones(1,femregion.nel));
 Edge.IT4_loc = mat2cell(zeros(femregion.nbases*max_nedges,femregion.nbases,femregion.nel),femregion.nbases*max_nedges,femregion.nbases,ones(1,femregion.nel));
  
-S_self = zeros(femregion.nbases * 2, femregion.nbases * 2, femregion.nel);
-IT_self = zeros(femregion.nbases * 2, femregion.nbases * 2, femregion.nel);
-Perm = computePermutationMatrix(femregion.degree);
-
 %% Loop over the elements
 
 % Visualization of computational progress
@@ -102,9 +98,6 @@ for ie = 1 : femregion.nel
     edges    = [1:femregion.nedges(ie) ; 2:femregion.nedges(ie), 1]';
     Tria_Del = delaunayTriangulation(coords_ie(:,1),coords_ie(:,2), edges);
     Tria     = Tria_Del( isInterior(Tria_Del) == 1, :);
-
-    Vloc = zeros(femregion.nbases * 2, femregion.nbases * 2);
-    Mloc = zeros(femregion.nbases * 2, femregion.nbases * 2);
     
     % Check if the element is poroelastic
     if tag_ie == 'E'
@@ -149,23 +142,12 @@ for ie = 1 : femregion.nel
             El.C1_loc{ie} = El.C1_loc{ie} + (dx .* (par.rho_e .* par.zeta.^2  .* phiq))' * phiq;
             
         end
-        Vloc(1:femregion.nbases, 1:femregion.nbases) = Perm * El.V1_loc{ie} * Perm';
-        Vloc(1:femregion.nbases, femregion.nbases+1:end) = Perm * El.V2_loc{ie}* Perm';
-        Vloc(femregion.nbases+1:end, 1:femregion.nbases) = Perm * El.V3_loc{ie}* Perm';
-        Vloc(femregion.nbases+1:end, femregion.nbases+1:end) = Perm * El.V4_loc{ie}* Perm';
-        Mloc(1:femregion.nbases, 1:femregion.nbases) = Perm * El.MPrjP_1_loc{ie}* Perm';
-        Mloc(femregion.nbases+1:end, femregion.nbases+1:end) = Perm * El.MPrjP_1_loc{ie}* Perm';
-        writematrix(Vloc, sprintf("A_loc_ela_%d.txt", ie - 1)); 
-        writematrix(Mloc, sprintf("M_loc_ela_%d.txt", ie - 1));           
-
  
         %% Boundary integrals and stabilization terms
         
         % Computation of all the penalty coefficients for the element ie
         [penalty_geom] = PenaltyCoefficient(femregion, Data, ie, neighedges_ie, neigh_ie, meshsize);
-        Sn_loc = zeros(femregion.nbases * 2, femregion.nbases * 2, neighbor.nedges(ie));
-        ITn_loc = zeros(femregion.nbases * 2, femregion.nbases * 2, neighbor.nedges(ie));
-        iedg_real = 1;
+
         for iedg = 1 : neighbor.nedges(ie) % loop over faces
             
             % Extraction of tag and id of neighbor el
@@ -250,43 +232,14 @@ for ie = 1 : femregion.nel
             par.mu_ave     = 2*par.mu .* par.mu_n ./ (par.mu + par.mu_n);
             par.harm_ave   = (par.lambda_ave + 2*par.mu_ave);
             par.m_ave      = 2*par.m .* par.m_n ./ (par.m + par.m_n);
-            par.beta_ave   = 2*par.beta .* par.beta_n ./ (par.beta + par.beta_n);
-            assert(all(par.lambda_ave == par.lam));    
-            assert(all(par.mu_ave == par.mu));    
+            par.beta_ave   = 2*par.beta .* par.beta_n ./ (par.beta + par.beta_n);           
                         
             % Construction and evalutation on the quadrature points of the basis functions
-            [phiedgeq, gradedgeqx, gradedgeqy] = Evalshape2D(femregion, ie, qNodes_1D);  
-            penalty_geom(iedg) = 1.0;          
+            [phiedgeq, gradedgeqx, gradedgeqy] = Evalshape2D(femregion, ie, qNodes_1D);            
             
-            % % Dirichlet boundary faces
-            % if neigh_ie(iedg) == -1
+            % Dirichlet boundary faces
+            if neigh_ie(iedg) == -1
                 
-            %     Edge.S1_P_loc{ie}(1:femregion.nbases,:) = Edge.S1_P_loc{ie}(1:femregion.nbases,:) + penalty_geom(iedg) * (ds .* par.harm_ave .* phiedgeq)' * phiedgeq;
-            %     Edge.S4_P_loc{ie}(1:femregion.nbases,:) = Edge.S4_P_loc{ie}(1:femregion.nbases,:) + penalty_geom(iedg) * (ds .* par.harm_ave .* phiedgeq)' * phiedgeq;
-
-            %     Edge.IT1_loc{ie}(1:femregion.nbases,:) = Edge.IT1_loc{ie}(1:femregion.nbases,:) + (ds .* (nx * (par.lambda_ave + 2*par.mu_ave) .* gradedgeqx + ny * par.mu_ave .* gradedgeqy ))' * phiedgeq;
-            %     Edge.IT2_loc{ie}(1:femregion.nbases,:) = Edge.IT2_loc{ie}(1:femregion.nbases,:) + (ds .* (ny * par.lambda_ave .* gradedgeqx + nx * par.mu_ave .* gradedgeqy ))' * phiedgeq;
-            %     Edge.IT3_loc{ie}(1:femregion.nbases,:) = Edge.IT3_loc{ie}(1:femregion.nbases,:) + (ds .* (ny * par.mu_ave .* gradedgeqx + nx * par.lambda_ave .* gradedgeqy ))' * phiedgeq;
-            %     Edge.IT4_loc{ie}(1:femregion.nbases,:) = Edge.IT4_loc{ie}(1:femregion.nbases,:) + (ds .* (nx * par.mu_ave .* gradedgeqx + ny * (par.lambda_ave + 2*par.mu_ave) .* gradedgeqy ))' * phiedgeq;
-                 
-            % % Absorbing boundary faces
-            % elseif neigh_ie(iedg) == -3 
-
-            %     Edge.ABC_S1_loc{ie}(1:femregion.nbases,:) = Edge.ABC_S1_loc{ie}(1:femregion.nbases,:) + (ds .* par.c11 .* phiedgeq)' * phiedgeq;
-            %     Edge.ABC_S2_loc{ie}(1:femregion.nbases,:) = Edge.ABC_S2_loc{ie}(1:femregion.nbases,:) + (ds .* par.c12 .* phiedgeq)' * phiedgeq;
-            %     Edge.ABC_S3_loc{ie}(1:femregion.nbases,:) = Edge.ABC_S3_loc{ie}(1:femregion.nbases,:) + (ds .* par.c21 .* phiedgeq)' * phiedgeq;
-            %     Edge.ABC_S4_loc{ie}(1:femregion.nbases,:) = Edge.ABC_S4_loc{ie}(1:femregion.nbases,:) + (ds .* par.c22 .* phiedgeq)' * phiedgeq;
-
-            %     Edge.ABC_R1_loc{ie}(1:femregion.nbases,:) = Edge.ABC_R1_loc{ie}(1:femregion.nbases,:) + (ds .* (par.c3_11 .* gradedgeqx + par.c4_11 .* gradedgeqy))' * phiedgeq;
-            %     Edge.ABC_R2_loc{ie}(1:femregion.nbases,:) = Edge.ABC_R2_loc{ie}(1:femregion.nbases,:) + (ds .* (par.c3_12 .* gradedgeqx + par.c4_12 .* gradedgeqy))' * phiedgeq;
-            %     Edge.ABC_R3_loc{ie}(1:femregion.nbases,:) = Edge.ABC_R3_loc{ie}(1:femregion.nbases,:) + (ds .* (par.c3_21 .* gradedgeqx + par.c4_21 .* gradedgeqy))' * phiedgeq;
-            %     Edge.ABC_R4_loc{ie}(1:femregion.nbases,:) = Edge.ABC_R4_loc{ie}(1:femregion.nbases,:) + (ds .* (par.c3_22 .* gradedgeqx + par.c4_22 .* gradedgeqy))' * phiedgeq;
-                                             
-            % % Elastic neighbor
-            % else
-            
-                
-                % Element itself
                 Edge.S1_P_loc{ie}(1:femregion.nbases,:) = Edge.S1_P_loc{ie}(1:femregion.nbases,:) + penalty_geom(iedg) * (ds .* par.harm_ave .* phiedgeq)' * phiedgeq;
                 Edge.S4_P_loc{ie}(1:femregion.nbases,:) = Edge.S4_P_loc{ie}(1:femregion.nbases,:) + penalty_geom(iedg) * (ds .* par.harm_ave .* phiedgeq)' * phiedgeq;
 
@@ -294,7 +247,32 @@ for ie = 1 : femregion.nel
                 Edge.IT2_loc{ie}(1:femregion.nbases,:) = Edge.IT2_loc{ie}(1:femregion.nbases,:) + (ds .* (ny * par.lambda_ave .* gradedgeqx + nx * par.mu_ave .* gradedgeqy ))' * phiedgeq;
                 Edge.IT3_loc{ie}(1:femregion.nbases,:) = Edge.IT3_loc{ie}(1:femregion.nbases,:) + (ds .* (ny * par.mu_ave .* gradedgeqx + nx * par.lambda_ave .* gradedgeqy ))' * phiedgeq;
                 Edge.IT4_loc{ie}(1:femregion.nbases,:) = Edge.IT4_loc{ie}(1:femregion.nbases,:) + (ds .* (nx * par.mu_ave .* gradedgeqx + ny * (par.lambda_ave + 2*par.mu_ave) .* gradedgeqy ))' * phiedgeq;
-            if neigh_ie(iedg) >0 
+                 
+            % Absorbing boundary faces
+            elseif neigh_ie(iedg) == -3 
+
+                Edge.ABC_S1_loc{ie}(1:femregion.nbases,:) = Edge.ABC_S1_loc{ie}(1:femregion.nbases,:) + (ds .* par.c11 .* phiedgeq)' * phiedgeq;
+                Edge.ABC_S2_loc{ie}(1:femregion.nbases,:) = Edge.ABC_S2_loc{ie}(1:femregion.nbases,:) + (ds .* par.c12 .* phiedgeq)' * phiedgeq;
+                Edge.ABC_S3_loc{ie}(1:femregion.nbases,:) = Edge.ABC_S3_loc{ie}(1:femregion.nbases,:) + (ds .* par.c21 .* phiedgeq)' * phiedgeq;
+                Edge.ABC_S4_loc{ie}(1:femregion.nbases,:) = Edge.ABC_S4_loc{ie}(1:femregion.nbases,:) + (ds .* par.c22 .* phiedgeq)' * phiedgeq;
+
+                Edge.ABC_R1_loc{ie}(1:femregion.nbases,:) = Edge.ABC_R1_loc{ie}(1:femregion.nbases,:) + (ds .* (par.c3_11 .* gradedgeqx + par.c4_11 .* gradedgeqy))' * phiedgeq;
+                Edge.ABC_R2_loc{ie}(1:femregion.nbases,:) = Edge.ABC_R2_loc{ie}(1:femregion.nbases,:) + (ds .* (par.c3_12 .* gradedgeqx + par.c4_12 .* gradedgeqy))' * phiedgeq;
+                Edge.ABC_R3_loc{ie}(1:femregion.nbases,:) = Edge.ABC_R3_loc{ie}(1:femregion.nbases,:) + (ds .* (par.c3_21 .* gradedgeqx + par.c4_21 .* gradedgeqy))' * phiedgeq;
+                Edge.ABC_R4_loc{ie}(1:femregion.nbases,:) = Edge.ABC_R4_loc{ie}(1:femregion.nbases,:) + (ds .* (par.c3_22 .* gradedgeqx + par.c4_22 .* gradedgeqy))' * phiedgeq;
+                                             
+            % Elastic neighbor
+            elseif neigh_ie(iedg) >0 && femregion.tag(neigh_ie(iedg)) == 'E'
+                
+                % Element itself
+                Edge.S1_P_loc{ie}(1:femregion.nbases,:) = Edge.S1_P_loc{ie}(1:femregion.nbases,:) + penalty_geom(iedg) * (ds .* par.harm_ave .* phiedgeq)' * phiedgeq;
+                Edge.S4_P_loc{ie}(1:femregion.nbases,:) = Edge.S4_P_loc{ie}(1:femregion.nbases,:) + penalty_geom(iedg) * (ds .* par.harm_ave .* phiedgeq)' * phiedgeq;
+
+                Edge.IT1_loc{ie}(1:femregion.nbases,:) = Edge.IT1_loc{ie}(1:femregion.nbases,:) + 0.5 * (ds .* (nx * (par.lambda_ave + 2*par.mu_ave) .* gradedgeqx + ny * par.mu_ave .* gradedgeqy ))' * phiedgeq;
+                Edge.IT2_loc{ie}(1:femregion.nbases,:) = Edge.IT2_loc{ie}(1:femregion.nbases,:) + 0.5 * (ds .* (ny * par.lambda_ave .* gradedgeqx + nx * par.mu_ave .* gradedgeqy ))' * phiedgeq;
+                Edge.IT3_loc{ie}(1:femregion.nbases,:) = Edge.IT3_loc{ie}(1:femregion.nbases,:) + 0.5 * (ds .* (ny * par.mu_ave .* gradedgeqx + nx * par.lambda_ave .* gradedgeqy ))' * phiedgeq;
+                Edge.IT4_loc{ie}(1:femregion.nbases,:) = Edge.IT4_loc{ie}(1:femregion.nbases,:) + 0.5 * (ds .* (nx * par.mu_ave .* gradedgeqx + ny * (par.lambda_ave + 2*par.mu_ave) .* gradedgeqy ))' * phiedgeq;
+
                 % Neighboring element
                 neigh_idx = find(idneigh)*femregion.nbases+1:(find(idneigh)+1)*(femregion.nbases);
                 index_neigh = (neighbor.neigh{ie}(iedg)-1)*femregion.nbases*ones(femregion.nbases,1) + (1:femregion.nbases)';
@@ -307,33 +285,17 @@ for ie = 1 : femregion.nel
                 phiedgeqneigh = Evalshape2D(femregion, neigh_ie(iedg), qNodes_1D);
                 
                 % Neighboring element
-                penalty_geom(iedg) = 1;
-                Stmp1 = (ds .* (par.harm_ave .* penalty_geom(iedg)) .* phiedgeq)' * phiedgeqneigh;
-                Stmp4 = (ds .* (par.harm_ave .* penalty_geom(iedg)) .* phiedgeq)' * phiedgeqneigh;
+                Edge.S1_P_loc{ie}(neigh_idx,:) = Edge.S1_P_loc{ie}(neigh_idx,:) - (ds .* (par.harm_ave .* penalty_geom(iedg)) .* phiedgeq)' * phiedgeqneigh;
+                Edge.S4_P_loc{ie}(neigh_idx,:) = Edge.S4_P_loc{ie}(neigh_idx,:) - (ds .* (par.harm_ave .* penalty_geom(iedg)) .* phiedgeq)' * phiedgeqneigh;
 
-                ITtmp1 = (ds .* (nx * (par.lambda_ave + 2*par.mu_ave).* gradedgeqx + ny * par.mu_ave .* gradedgeqy ))' * phiedgeqneigh;
-                ITtmp2 = (ds .* (ny * par.lambda_ave .* gradedgeqx + nx * par.mu_ave .* gradedgeqy ))' * phiedgeqneigh;
-                ITtmp3 = (ds .* (ny * par.mu_ave .* gradedgeqx + nx * par.lambda_ave .* gradedgeqy ))' * phiedgeqneigh;
-                ITtmp4 = (ds .* (nx * par.mu_ave .* gradedgeqx + ny * (par.lambda_ave + 2*par.mu_ave) .* gradedgeqy ))' * phiedgeqneigh;
-
-                Sn_loc(:, :, iedg_real) = [Perm * Stmp1 * Perm', zeros(size(Stmp1)); zeros(size(Stmp1)), Perm * Stmp4 * Perm'];
-                ITn_loc(:, :, iedg_real) = [Perm * ITtmp1 * Perm', Perm * ITtmp2* Perm'; Perm * ITtmp3* Perm', Perm * ITtmp4* Perm'];
-                iedg_real = iedg_real + 1; 
+                Edge.IT1_loc{ie}(neigh_idx,:) = Edge.IT1_loc{ie}(neigh_idx,:) - 0.5 * (ds .* (nx * (par.lambda_ave + 2*par.mu_ave).* gradedgeqx + ny * par.mu_ave .* gradedgeqy ))' * phiedgeqneigh;
+                Edge.IT2_loc{ie}(neigh_idx,:) = Edge.IT2_loc{ie}(neigh_idx,:) - 0.5 * (ds .* (ny * par.lambda_ave .* gradedgeqx + nx * par.mu_ave .* gradedgeqy ))' * phiedgeqneigh;
+                Edge.IT3_loc{ie}(neigh_idx,:) = Edge.IT3_loc{ie}(neigh_idx,:) - 0.5 * (ds .* (ny * par.mu_ave .* gradedgeqx + nx * par.lambda_ave .* gradedgeqy ))' * phiedgeqneigh;
+                Edge.IT4_loc{ie}(neigh_idx,:) = Edge.IT4_loc{ie}(neigh_idx,:) - 0.5 * (ds .* (nx * par.mu_ave .* gradedgeqx + ny * (par.lambda_ave + 2*par.mu_ave) .* gradedgeqy ))' * phiedgeqneigh;
+              
             end
+          
         end
-
-        ITloc = zeros(femregion.nbases * 2, femregion.nbases * 2);
-        Sloc = zeros(femregion.nbases * 2, femregion.nbases * 2);
-        ITloc(1:femregion.nbases, 1:femregion.nbases) = Perm * Edge.IT1_loc{ie}(1:femregion.nbases,:) * Perm';
-        ITloc(1:femregion.nbases, femregion.nbases+1:end) = Perm * Edge.IT2_loc{ie}(1:femregion.nbases,:) * Perm';
-        ITloc(femregion.nbases+1:end, 1:femregion.nbases) = Perm * Edge.IT3_loc{ie}(1:femregion.nbases,:) * Perm';
-        ITloc(femregion.nbases+1:end, femregion.nbases+1:end) = Perm * Edge.IT4_loc{ie}(1:femregion.nbases,:) * Perm';
-        Sloc(1:femregion.nbases, 1:femregion.nbases) = Perm * Edge.S1_P_loc{ie}(1:femregion.nbases,:)* Perm';
-        Sloc(femregion.nbases+1:end, femregion.nbases+1:end) = Perm * Edge.S4_P_loc{ie}(1:femregion.nbases,:)* Perm';
-        writematrix(ITloc, sprintf("IT_loc_ela_%d.txt", ie - 1)); 
-        writematrix(Sloc, sprintf("S_loc_ela_%d.txt", ie - 1));    
-        writematrix(ITn_loc, sprintf("ITn_loc_ela_%d.txt", ie - 1)); 
-        writematrix(Sn_loc, sprintf("Sn_loc_ela_%d.txt", ie - 1));    
 
     end
     
@@ -423,7 +385,7 @@ A.IT4_P    = sparse(ii_index_neigh,jj_index_neigh,Edge.IT4_loc,femregion.ndof,fe
 % Mass matrix elastic
 M_P_rho   = [A.M1_P_rho, 0*A.M1_P_rho; 0*A.M1_P_rho, A.M1_P_rho];
 % Projection matrix
-MprjP   = [A.MPrjP_1, 0*A.MPrjP_1; 0*A.MPrjP_1, A.MPrjP_1];
+MprjP   = buildGlob(A.MPrjP_1, 0*A.MPrjP_1, 0*A.MPrjP_1, A.MPrjP_1, femregion.degree);
 % Damping matrix velocity
 D = [A.D1, 0*A.D1; 0*A.D1, A.D1];
 C = [A.C1, 0*A.C1; 0*A.C1, A.C1];
@@ -433,10 +395,13 @@ ABC_S = -[A.ABC_S1, A.ABC_S2; A.ABC_S3, A.ABC_S4];
 ABC_R = -[A.ABC_R1, A.ABC_R2; A.ABC_R3, A.ABC_R4];
 
 % Elastic dg matrix
-V    = [A.V1,    A.V2;    A.V3,    A.V4];
-IT_P = [A.IT1_P, A.IT2_P; A.IT3_P, A.IT4_P];
-S_P  = [A.S1_P,  A.S2_P;  A.S3_P,  A.S4_P];
-
+V    = buildGlob(A.V1,    A.V2,    A.V3,    A.V4, femregion.degree);
+IT_P = buildGlob(A.IT1_P, A.IT2_P, A.IT3_P, A.IT4_P, femregion.degree);
+S_P  = buildGlob(A.S1_P,  A.S2_P,  A.S3_P,  A.S4_P, femregion.degree);
+A_E = full(V + S_P - IT_P - transpose(IT_P));
+V = full(V);
+IT_P = full(IT_P);
+S_P = full(S_P);
 
 Matrices.Ela = struct( ...
     'A_E', V + S_P - IT_P - transpose(IT_P), ...

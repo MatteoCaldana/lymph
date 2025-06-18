@@ -10,7 +10,7 @@ Data.LabBcEla   = 'DDDD'; % Dirichlet/Neumann/Abso/
 %% Geometrical properties 
 
 Data.domain          = [0 1 0 1];
-Data.N               = {10, 20, 30};  %number of elements
+Data.N               = {20, 40, 80, 160};  %number of elements
 Data.MeshFromFile    = false;
 Data.FolderName      = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
