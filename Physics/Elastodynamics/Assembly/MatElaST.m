@@ -318,9 +318,8 @@ for ie = 1 : femregion.nel
 
                 Sn_loc(:, :, iedg_real) = [Perm * Stmp1 * Perm', zeros(size(Stmp1)); zeros(size(Stmp1)), Perm * Stmp4 * Perm'];
                 ITn_loc(:, :, iedg_real) = [Perm * ITtmp1 * Perm', Perm * ITtmp2* Perm'; Perm * ITtmp3* Perm', Perm * ITtmp4* Perm'];
-              
+                iedg_real = iedg_real + 1; 
             end
-            iedg_real = iedg_real + 1; 
         end
 
         ITloc = zeros(femregion.nbases * 2, femregion.nbases * 2);
