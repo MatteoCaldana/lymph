@@ -63,6 +63,9 @@ elseif (strcmp(MeshType,'C')==1)
     % cartesian mesh
     ax = Dati.domain(1); bx = Dati.domain(2);
     ay = Dati.domain(3); by = Dati.domain(4);
+    if numel(N) == 1
+        N = [N, N];
+    end
     nelx = N(1); nely = N(2);
     Nel = nelx*nely;
     

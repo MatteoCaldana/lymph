@@ -30,8 +30,9 @@ while(It<=MaxIter && Err>Tol)
   Area = sum(abs(A));
   Err = sqrt(sum((A.^2).*sum((Pc-P).*(Pc-P),2)))*NElem/Area^1.5;
   fprintf('It: %3d   Error: %1.3e\n',It,Err); It=It+1;
-  if NElem<=2000, PolyMshr_PlotMsh(Node,Element,NElem); end; 
+  %if NElem<=2000, PolyMshr_PlotMsh(Node,Element,NElem); end; 
 end
+PolyMshr_PlotMsh(Node,Element,NElem);
 [Node,Element] = PolyMshr_ExtrNds(NElem,Node,Element);  %Extract node list
 [Node,Element] = PolyMshr_CllpsEdgs(Node,Element,0.1);  %Remove small edges
 [Node,Element] = PolyMshr_RsqsNds(Node,Element);        %Reoder Nodes
